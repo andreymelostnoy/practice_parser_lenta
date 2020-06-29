@@ -18,16 +18,29 @@ def find_list_of_books(soup):
 
 def parsing_books(list_of_books):
     books = []
+    litmir = "https://www.litmir.me/"
     for book in list_of_books:
-        name = book.find("span", {"itemprop": "name"})
-        link = book.find("", {"": ""})
-        author = book.find("", {"": ""})
-        genre = book.find("", {"": ""})
-        rating = book.find("", {"": ""})
-        pages = book.find("", {"": ""})
-        language = book.find("", {"": ""})
-        year = book.find("", {"": ""})
-        description = book.find("", {"": ""})
+        name = book.find("span", {"itemprop": "name"}).text
+        link = litmir + book.find("div", {"class": "book_name"}).find("a").get("href").lstrip("/")
+        author = book.find("span", {"itemprop": "author"}).find("a").text
+        genre = book.find("span", {"itemprop": "genre"}).text.replace("...", "")
+        rating = book.find("div", {"class": "description"}).find("span", {"class": "orange_desc"}).text
+        pages = "test" # book.find("span", string="Год:")
+        language = "test" # book.find("", {"": ""})
+        year = "test" # book.find("", {"": ""})
+        description = book.find("div", {"itemprop": "description"}).text
+        books.append({
+            "name": name,
+            "link": link,
+            "author": author,
+            "genre": genre,
+            "rating": rating,
+            "pages": pages,
+            "language": language,
+            "year": year,
+            "description": description
+        })
+    return books
 
 
 def write_output_to_file(postapocalypse_books):
@@ -44,8 +57,7 @@ def main(_url):
     page = open_page(_url).text
     soup = BeautifulSoup(page, "lxml")
     list_of_books = find_list_of_books(soup)
-    print(len(list_of_books))
-    # parsing_books(list_of_books)
+    write_output_to_file(parsing_books(list_of_books))
 
 
 url = "https://www.litmir.me/bs?g=sg150&p={page}"
