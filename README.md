@@ -1,3 +1,3 @@
-# practice_parser_lenta
+# practice_parsers
 
-Test practice project to parse some news from lenta
+parser_lenta.py - Test practice project to parse some news from lenta
