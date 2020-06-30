@@ -1,6 +1,7 @@
 import requests
 import csv
-import re
+from datetime import datetime
+import time
 from bs4 import BeautifulSoup
 
 
@@ -17,17 +18,24 @@ def find_list_of_books(soup):
 
 
 def parsing_books(list_of_books):
-    books = []
+    global year, language, pages
+    _books = []
     litmir = "https://www.litmir.me/"
-    for book in list_of_books:
-        book = book.find("span", {"itemprop": "name"}).text
-        link = litmir + book.find("div", {"class": "book_name"}).find("a").get("href").lstrip("/")
-        author = book.find("span", {"itemprop": "author"}).find("a").text
-        genre = book.find("span", {"itemprop": "genre"}).text.replace("...", "")
-        rating = book.find("div", {"class": "description"}).find("span", {"class": "orange_desc"}).text
+    for book_ in list_of_books:
+        book = book_.find("span", {"itemprop": "name"}).text
+        try:
+            link = litmir + book_.find("div", {"class": "book_name"}).find("a").get("href").lstrip("/")
+        except:
+            link = "Something wrong with " + book
+        author = book_.find("span", {"itemprop": "author"}).find("a").text
+        genre = book_.find("span", {"itemprop": "genre"}).text.replace("...", "")
+        try:
+            rating = book_.find("div", {"class": "description"}).find("span", {"class": "orange_desc"}).text
+        except:
+            rating = "Something wrong with " + book
 
         def find_pages_years_languages(element):
-            return book.find("span", string=element).find_parent("div").find_all("span", {"class": "desc2"})
+            return book_.find("span", string=element).find_parent("div").find_all("span", {"class": "desc2"})
 
         additional_elements = find_pages_years_languages("Язык книги:")
         if len(additional_elements) == 3:
@@ -38,9 +46,9 @@ def parsing_books(list_of_books):
             year = "Не указан"
             language = additional_elements[0].text.strip()
             pages = additional_elements[1].text.strip()
-        description = book.find("div", {"itemprop": "description"}).text
-        books.append({
-            "book": book,
+        description = book_.find("div", {"itemprop": "description"}).text
+        _books.append({
+            "book": book_,
             "link": link,
             "author": author,
             "genre": genre,
@@ -50,16 +58,16 @@ def parsing_books(list_of_books):
             "pages": pages,
             "description": description
         })
-    return books
+    return _books
 
 
 def write_output_to_file(postapocalypse_books):
-    def f(file_name, books):
+    def f(file_name, _books):
         with open(file_name, "a", newline="") as file:
             columns = ["book", "link", "author", "genre", "rating", "pages", "language", "year", "description"]
             writer = csv.DictWriter(file, fieldnames=columns)
             writer.writeheader()
-            writer.writerows(books)
+            writer.writerows(_books)
     f("postapocalypse_books.csv", postapocalypse_books)
 
 
@@ -67,23 +75,15 @@ def main(_url):
     page = open_page(_url).text
     soup = BeautifulSoup(page, "lxml")
     list_of_books = find_list_of_books(soup)
-    write_output_to_file(parsing_books(list_of_books))
+    return parsing_books(list_of_books)
 
 
 url = "https://www.litmir.me/bs?g=sg150&p={page}"
 
 if __name__ == '__main__':
-    # books = []
-    for i in range(1, 2):
-        main(url.format(page=i))
-        # books.append(main(url.format(page=i)))
-    # books = [{"name": "1",
-    #           "url": "2",
-    #           "author": "3",
-    #           "genre": "4",
-    #           "rating": "5",
-    #           "pages": "6",
-    #           "language": "7",
-    #           "year": "8",
-    #           "description": "9"}]
-    # write_output_to_file(books)
+    start_time = datetime.now()
+    books = []
+    for i in range(1, 29):
+        books.extend(main(url.format(page=i)))
+    write_output_to_file(books)
+    print(datetime.now() - start_time)
