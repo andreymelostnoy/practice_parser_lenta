@@ -48,7 +48,7 @@ def parsing_books(list_of_books):
             pages = additional_elements[1].text.strip()
         description = book_.find("div", {"itemprop": "description"}).text
         _books.append({
-            "book": book_,
+            "book": book,
             "link": link,
             "author": author,
             "genre": genre,
